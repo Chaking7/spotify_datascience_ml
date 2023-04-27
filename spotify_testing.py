@@ -31,8 +31,12 @@ def get_playlist_data(id):
     track_uris = []
     track_analysiss = []
     track_aud_feat = []
+    i = 0
     for item in result['tracks']['items']:
         track = item['track']
+        if i is 0:
+            print(track)
+            i += 1
         track_names.append(track['name'])
         track_uris.append(track['uri'])
         track_analysiss.append(sp.audio_analysis(track['uri']))
@@ -74,7 +78,7 @@ first_graph_feat = [*first_graph_feat, first_graph_feat[0]]
 first_graph_val = [*first_graph_val, first_graph_val[0]]
 '''
 df = pd.DataFrame({
-    'feature': first_graph_feat,
+    'feature': first_graph_feat,m
     'values': first_graph_val
 }
 )
