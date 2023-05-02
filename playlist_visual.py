@@ -15,9 +15,9 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 # example_pl = 'https://open.spotify.com/playlist/1Gdw2GwQKAgMcgBeiJQIUk?si=acf4e40e069a4cc5'
 # example_pl = 'https://open.spotify.com/playlist/23Yae1UK3nBZhnjuq96Sit?si=eb8cee1dc3ac440c'
 # example_pl = 'https://open.spotify.com/playlist/1BGYxCTJaHiGf8wXPHDWcB?si=54d08f9863dc48fb'
-# example_pl = 'https://open.spotify.com/playlist/2xsaTfj4RdIMG4MPHdvJ5x?si=a3fc31337df444b5'
-example_pl = 'https://open.spotify.com/playlist/3G2nlO2F0zEjW4mGiTdFt3?si=47cc05d8bcac402f'
-
+example_pl = 'https://open.spotify.com/playlist/2xsaTfj4RdIMG4MPHdvJ5x?si=a3fc31337df444b5'
+# example_pl = 'https://open.spotify.com/playlist/3G2nlO2F0zEjW4mGiTdFt3?si=47cc05d8bcac402f'
+# example_pl = 'https://open.spotify.com/playlist/4SyYGXFLFWBPrugtLkm0l3?si=89990794736a435a'
 
 
 def get_playlist_data(id):
@@ -34,22 +34,39 @@ def get_playlist_data(id):
     track_aud_feats.append(sp.audio_features(track['uri']))
   return track_names, track_artist, track_aud_feats
 
+example_album = 'https://open.spotify.com/album/6pChEm0qiDT32ZHfNwVwqh?si=1ts6jkBpRaCPIBjvjRKLiQ'
+def get_album_data(id):
+  result = sp.album_tracks(id)
+  track_names = []
+  # track_artist = result['items']['artists']['name']
+  # track_uris = []
+  track_aud_feats = []
+  artist = result['items'][0]['artists'][0]['name']
+  for item in result['items']:
+    track_names.append(item['name'])
+    track_aud_feats.append(sp.audio_features(item['uri']))
+  return track_names, artist, track_aud_feats
 track_names, track_artist, track_aud_feats = get_playlist_data(example_pl)
-for c in range(0,len(track_aud_feats) - 1):
-  track_aud_feats[c] = track_aud_feats[c][0]
-  del track_aud_feats[c]['loudness']
-  del track_aud_feats[c]['tempo']
-  track_aud_feats[c]['key'] = track_aud_feats[c].get('key') / 100.0
-  del track_aud_feats[c]['type']
-  del track_aud_feats[c]['id']
-  del track_aud_feats[c]['uri']
-  del track_aud_feats[c]['track_href']
-  del track_aud_feats[c]['analysis_url']
-  del track_aud_feats[c]['duration_ms']
-  del track_aud_feats[c]['time_signature']
-print(track_names[0])
-print(track_artist[0])
-print(track_aud_feats[0])
+
+track_names2, artist, track_aud_feats2 = get_album_data(example_album)
+
+
+def simplify_aud_feats(audio_feats):
+  for c in range(0,len(audio_feats) - 1):
+    audio_feats[c] = audio_feats[c][0]
+    del audio_feats[c]['loudness']
+    del audio_feats[c]['tempo']
+    audio_feats[c]['key'] = audio_feats[c].get('key') / 100.0
+    del audio_feats[c]['type']
+    del audio_feats[c]['id']
+    del audio_feats[c]['uri']
+    del audio_feats[c]['track_href']
+    del audio_feats[c]['analysis_url']
+    del audio_feats[c]['duration_ms']
+    del audio_feats[c]['time_signature']
+  return audio_feats
+track_aud_feats = simplify_aud_feats(track_aud_feats)
+album_aud_feats = simplify_aud_feats(track_aud_feats2)
 
 df = pd.DataFrame({
   'track_name' : track_names,
@@ -61,24 +78,34 @@ df = pd.DataFrame({
 track_fea = df['track_features'].to_list()
 track_name = df['track_name'].to_list()
 
-feature_names = []
-song_vals = []
-for key, item in track_fea[0].items():
-  feature_names.append(key)
+def separate(features):
+  feature_names = []
+  song_vals = []
+  for key, item in features[0].items():
+    feature_names.append(key)
 
-for c in range(0, len(track_fea) - 1):
-  this_val = []
-  for key, item in track_fea[c].items():
-    this_val.append(item)
-  this_val = [*this_val, this_val[0]]
-  song_vals.append(this_val)
+  for c in range(0, len(features) - 1):
+    this_val = []
+    for key, item in features[c].items():
+      this_val.append(item)
+    this_val = [*this_val, this_val[0]]
+    song_vals.append(this_val)
 
-feature_names = [*feature_names, feature_names[0]]
+  feature_names = [*feature_names, feature_names[0]]
+  return feature_names, song_vals
 
+feature_names, song_vals = separate(track_fea)
+length = len(song_vals) - 2
 
-fig = make_subplots(rows= 5, cols= 5)
+album_feat_names, album_song_vals = separate(track_aud_feats2)
 
+fig = make_subplots(rows= 1, cols= 2)
+
+# got to figure out how to break it into two graphs at the moment
 for c in range(0, len(song_vals) -1):
   fig.add_trace(go.Scatterpolar(r=song_vals[c], theta=feature_names, name=track_name[c]))
+for c in range(0, len(album_song_vals) - 1):
+  fig.add_trace(go.Scatterpolar(r=album_song_vals[c], theta=album_feat_names, name=track_names2[c]))
+
 
 fig.show()
