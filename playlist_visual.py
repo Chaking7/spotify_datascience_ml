@@ -52,7 +52,7 @@ track_names2, artist, track_aud_feats2 = get_album_data(example_album)
 
 
 def simplify_aud_feats(audio_feats):
-  for c in range(0,len(audio_feats) - 1):
+  for c in range(0,len(audio_feats)):
     audio_feats[c] = audio_feats[c][0]
     del audio_feats[c]['loudness']
     del audio_feats[c]['tempo']
@@ -84,7 +84,7 @@ def separate(features):
   for key, item in features[0].items():
     feature_names.append(key)
 
-  for c in range(0, len(features) - 1):
+  for c in range(0, len(features)):
     this_val = []
     for key, item in features[c].items():
       this_val.append(item)
@@ -93,7 +93,7 @@ def separate(features):
 
   feature_names = [*feature_names, feature_names[0]]
   return feature_names, song_vals
-
+'''
 feature_names, song_vals = separate(track_fea)
 length = len(song_vals) - 2
 
@@ -101,15 +101,39 @@ album_feat_names, album_song_vals = separate(track_aud_feats2)
 
 fig = make_subplots(rows= 1, cols= 2, specs=[[{'type': 'polar'}] * 2] * 1)
 
-# got to figure out how to break it into two graphs at the moment
+
 for c in range(0, len(song_vals) -1):
   fig.add_trace(go.Scatterpolar(r=song_vals[c], theta=feature_names, name=track_name[c]), row= 1, col = 1)
 for c in range(0, len(album_song_vals) - 1):
   fig.add_trace(go.Scatterpolar(r=album_song_vals[c], theta=album_feat_names, name=track_names2[c]), row=1, col =2)
+'''
 
 
-fig.show()
+
+# fig.show()
 
 
 def compare_two_albums(id1, id2):
-  pass
+  album1_track_names, album1_artist, album1_aud_feats = get_album_data(id1)
+  album2_track_names, album2_artist, album2_aud_feats = get_album_data(id2)
+
+  album1_aud_feats = simplify_aud_feats(album1_aud_feats)
+  album2_aud_feats = simplify_aud_feats(album2_aud_feats)
+
+  album1_feat_names, album1_song_vals = separate(album1_aud_feats)
+  album2_feat_names, album2_song_vals = separate(album2_aud_feats)
+
+  fig = make_subplots(rows= 1, cols= 2, specs=[[{'type': 'polar'}] * 2] * 1)
+
+  for c in range(0, len(album1_song_vals)):
+    fig.add_trace(go.Scatterpolar(r=album1_song_vals[c], theta= album1_feat_names, name= album1_track_names[c]), row= 1, col=1)
+  for c in range(0, len(album2_song_vals)):
+    fig.add_trace(go.Scatterpolar(r=album2_song_vals[c], theta= album2_feat_names, name= album2_track_names[c]), row= 1, col=2)
+
+  fig.show()
+
+# igor
+album1 = 'https://open.spotify.com/album/5zi7WsKlIiUXv09tbGLKsE?si=pfEctMYKRqChtWvcoSP0JQ'
+# damn
+album2 = 'https://open.spotify.com/album/4eLPsYPBmXABThSJ821sqY?si=T_CkyiH4RO2Grc3TFvklAg'
+compare_two_albums(album1, album2)
