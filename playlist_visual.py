@@ -99,13 +99,17 @@ length = len(song_vals) - 2
 
 album_feat_names, album_song_vals = separate(track_aud_feats2)
 
-fig = make_subplots(rows= 1, cols= 2)
+fig = make_subplots(rows= 1, cols= 2, specs=[[{'type': 'polar'}] * 2] * 1)
 
 # got to figure out how to break it into two graphs at the moment
 for c in range(0, len(song_vals) -1):
-  fig.add_trace(go.Scatterpolar(r=song_vals[c], theta=feature_names, name=track_name[c]))
+  fig.add_trace(go.Scatterpolar(r=song_vals[c], theta=feature_names, name=track_name[c]), row= 1, col = 1)
 for c in range(0, len(album_song_vals) - 1):
-  fig.add_trace(go.Scatterpolar(r=album_song_vals[c], theta=album_feat_names, name=track_names2[c]))
+  fig.add_trace(go.Scatterpolar(r=album_song_vals[c], theta=album_feat_names, name=track_names2[c]), row=1, col =2)
 
 
 fig.show()
+
+
+def compare_two_albums(id1, id2):
+  pass
